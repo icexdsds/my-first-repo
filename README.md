@@ -15,3 +15,6 @@
 ```bash
 python -m unittest
 ```
+
+## 网页演示
+打开 `web/index.html` 体验深浅色切换与功能介绍弹窗。

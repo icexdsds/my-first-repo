@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8" />
+    <title>功能演示页</title>
+    <style>
+        /* 使用 CSS 变量管理颜色 */
+        :root {
+            --bg-light: #ffffff;
+            --text-light: #000000;
+            --bg-dark: #1e1e1e;
+            --text-dark: #ffffff;
+        }
+        body {
+            margin: 0;
+            font-family: sans-serif;
+            transition: background-color 0.3s, color 0.3s;
+        }
+        body.light {
+            background-color: var(--bg-light);
+            color: var(--text-light);
+        }
+        body.dark {
+            background-color: var(--bg-dark);
+            color: var(--text-dark);
+        }
+        nav {
+            display: flex;
+            gap: 1rem;
+            padding: 1rem;
+        }
+        nav a, nav span {
+            cursor: pointer;
+        }
+        /* Tooltip 样式 */
+        #featureInfo {
+            position: relative;
+        }
+        #featureInfo:hover::after {
+            content: "点击查看功能介绍";
+            position: absolute;
+            top: 1.5rem;
+            left: 0;
+            background: rgba(0,0,0,0.7);
+            color: #fff;
+            padding: 0.2rem 0.5rem;
+            border-radius: 4px;
+            white-space: nowrap;
+            font-size: 0.8rem;
+        }
+        /* Modal 样式 */
+        .modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.5);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .modal-content {
+            background: inherit;
+            background-color: var(--bg-light);
+            color: var(--text-light);
+            padding: 1rem 2rem;
+            border-radius: 8px;
+            max-width: 500px;
+            width: 90%;
+        }
+        body.dark .modal-content {
+            background-color: var(--bg-dark);
+            color: var(--text-dark);
+        }
+        .hidden {
+            display: none;
+        }
+        section {
+            padding: 2rem 1rem;
+        }
+    </style>
+</head>
+<body>
+    <nav>
+        <button id="themeToggle">切换主题</button>
+        <a href="#about">关于</a>
+        <a href="#contact">联系</a>
+        <span id="featureInfo" tabindex="0">了解功能</span>
+    </nav>
+    <section id="home">
+        <h1>欢迎访问演示页面</h1>
+        <p>此页面支持深浅色切换并可自动根据日出日落设置主题。</p>
+    </section>
+    <section id="about">
+        <h2>关于</h2>
+        <p>这是一个用于展示多种交互效果的简单网页示例。</p>
+    </section>
+    <section id="contact">
+        <h2>联系</h2>
+        <p>如需联系，请发送邮件至 example@example.com。</p>
+    </section>
+    <!-- 功能介绍弹窗 -->
+    <div id="modal" class="modal hidden">
+        <div class="modal-content">
+            <h3>功能介绍</h3>
+            <p>示例：1、快速；2、美观；3、可拓展。</p>
+            <ul>
+                <li><strong>快速：</strong>页面加载迅速，响应灵敏。</li>
+                <li><strong>美观：</strong>支持深浅色主题，外观清爽。</li>
+                <li><strong>可拓展：</strong>结构简单，方便添加新功能。</li>
+            </ul>
+            <button id="closeModal">关闭</button>
+        </div>
+    </div>
+    <script>
+        // 切换主题函数
+        const applyTheme = (theme) => {
+            document.body.classList.remove('light', 'dark');
+            document.body.classList.add(theme);
+        };
+
+        // 根据日出日落自动设置主题
+        const setThemeBySun = () => {
+            const fallback = () => {
+                const hour = new Date().getHours();
+                applyTheme(hour >= 6 && hour < 18 ? 'light' : 'dark');
+            };
+            if (!navigator.geolocation) {
+                fallback();
+                return;
+            }
+            navigator.geolocation.getCurrentPosition((pos) => {
+                const { latitude, longitude } = pos.coords;
+                fetch(`https://api.sunrise-sunset.org/json?lat=${latitude}&lng=${longitude}&formatted=0`)
+                    .then((res) => res.json())
+                    .then((data) => {
+                        const now = new Date();
+                        const sunrise = new Date(data.results.sunrise);
+                        const sunset = new Date(data.results.sunset);
+                        applyTheme(now >= sunrise && now < sunset ? 'light' : 'dark');
+                    })
+                    .catch(fallback);
+            }, fallback);
+        };
+
+        document.addEventListener('DOMContentLoaded', () => {
+            const themeToggle = document.getElementById('themeToggle');
+            const featureInfo = document.getElementById('featureInfo');
+            const modal = document.getElementById('modal');
+            const closeModal = document.getElementById('closeModal');
+
+            setThemeBySun();
+            themeToggle.addEventListener('click', () => {
+                const isDark = document.body.classList.contains('dark');
+                applyTheme(isDark ? 'light' : 'dark');
+            });
+
+            featureInfo.addEventListener('click', () => {
+                modal.classList.remove('hidden');
+            });
+            closeModal.addEventListener('click', () => {
+                modal.classList.add('hidden');
+            });
+        });
+    </script>
+</body>
+</html>
